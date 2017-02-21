@@ -93,6 +93,10 @@ Download and run using the python interpreter:
 
     python mamescraper.py
 
+or
+
+Download the Windows executable file from the `releases <https://github.com/pdrb/mamescraper/releases>`_ page.
+
 Usage
 -----
 
