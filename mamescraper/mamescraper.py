@@ -1,9 +1,9 @@
 #!/usr/bin/python
 
-# mamescraper 0.1
+# mamescraper 0.2
 # author: Pedro Buteri Gonring
 # email: pedro@bigode.net
-# date: 21/02/2017
+# date: 23/02/2017
 
 try:
     import xml.etree.cElementTree as ET
@@ -22,7 +22,7 @@ import json
 import time
 
 
-version = '0.1'
+version = '0.2'
 
 
 # Parse and validate arguments
@@ -44,6 +44,10 @@ def get_parsed_args():
     parser.add_option(
         '-d', dest='roms_dir', default=cwd,
         help='directory containing the games (default: current directory)'
+    )
+    parser.add_option(
+        '-e', dest='images_dir_name', default='images',
+        help='directory name to download the images (default: %default)'
     )
     parser.add_option(
         '-f', dest='format', default='zip', choices=('zip', '7z'),
@@ -141,7 +145,7 @@ def get_mame_db(db_zip_file):
     # Unzip file
     mame_database_zip = zipfile.ZipFile(db_zip_file, 'r')
     try:
-        mame_database_zip.extractall()
+        mame_database_zip.extractall(options.roms_dir)
     except:
         print '\nError: Could not extract zip file, probably corrupted'
         print 'Aborting.'
@@ -260,7 +264,8 @@ def generate_gamelist_bigode(mame_database_xml, romlist, gamelist_xml=''):
                 ET.SubElement(gameitem, 'image').text = ''
             else:
                 ET.SubElement(
-                    gameitem, 'image').text = './images/' + rom + '.png'
+                    gameitem, 'image').text = './%s/%s.png' % (
+                        options.images_dir_name, rom)
             # Set rating
             rating = game.find('rating').text
             ET.SubElement(gameitem, 'rating').text = rating
@@ -447,7 +452,7 @@ def work_work(rom):
         if type(game) == dict:
             down_msg = download_img_type(rom, 'adb')
             if 'download' in down_msg:
-                game['image'] = './images/' + rom + '.png'
+                game['image'] = './%s/%s.png' % (options.images_dir_name, rom)
             game['rom'] = rom
             adb_found.append(game)
             sys.stdout.write(
@@ -469,10 +474,12 @@ def cli():
     global adb_found
 
     (options, args) = get_parsed_args()
+    # Get only the dir name if a path is provided
+    options.images_dir_name = os.path.basename(options.images_dir_name)
 
     user_agent = 'mamescraper/%s (%s)' % (version, sys.platform)
     output_file = os.path.join(options.roms_dir, options.output_file)
-    images_dir = os.path.join(options.roms_dir, 'images')
+    images_dir = os.path.join(options.roms_dir, options.images_dir_name)
     # Store roms that do not have images on bigode source
     not_found_imgs = []
     # Store the games information found on adb
@@ -480,11 +487,16 @@ def cli():
     # Store init time
     init_time = time.time()
 
+    if not os.path.isdir(options.roms_dir):
+        print '\nError: %s is not a valid directory' % options.roms_dir
+        sys.exit(1)
+
     print '\nInitializing the scraper...'
 
     # Generate list of roms to scrape
-    romlist = glob.glob('*.' + options.format)
-    romlist = [item.replace('.' + options.format, '') for item in romlist]
+    romlist = glob.glob(os.path.join(options.roms_dir, '*.' + options.format))
+    romlist = [os.path.basename(item).replace(
+        '.' + options.format, '') for item in romlist]
 
     # Parse existing gamelist and generate new romlist if append enable
     if options.append:

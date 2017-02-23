@@ -102,25 +102,28 @@ Usage
 
 ::
 
-    Usage: mamescraper [options]
+    Usage: mamescraper.py [options]
 
     scrap mame games information and images from 'mame.bigode.net' or
     'adb.arcadeitalia.net'
 
     Options:
-    --version       show program's version number and exit
-    -h, --help      show this help message and exit
-    -a, --append    scrap only missing roms from output file and append it to
-                    the file (default: disabled)
-    -d ROMS_DIR     directory containing the games (default: current directory)
-    -f FORMAT       file format of the games: 'zip' or '7z' (default: zip)
-    -i IMAGES       images type: 'mixed', 'title' or 'flyer' - mixed will
-                    download a flyer and fallback to title if a flyer is not
-                    found (default: mixed)
-    -o OUTPUT_FILE  the xml file that will be created (default: gamelist.xml)
-    -s SOURCE       information and images source: 'bigode' or 'adb' (default:
-                    bigode)
-    -w WORKERS      number of workers threads to use (default: 5)
+    --version           show program's version number and exit
+    -h, --help          show this help message and exit
+    -a, --append        scrap only missing roms from output file and append it
+                        to the file (default: disabled)
+    -d ROMS_DIR         directory containing the games (default: current
+                        directory)
+    -e IMAGES_DIR_NAME  directory name to download the images (default: images)
+    -f FORMAT           file format of the games: 'zip' or '7z' (default: zip)
+    -i IMAGES           images type: 'mixed', 'title' or 'flyer' - mixed will
+                        download a flyer and fallback to title if a flyer is not
+                        found (default: mixed)
+    -o OUTPUT_FILE      the xml file that will be created (default:
+                        gamelist.xml)
+    -s SOURCE           information and images source: 'bigode' or 'adb'
+                        (default: bigode)
+    -w WORKERS          number of workers threads to use (default: 5)
 
 Examples
 --------
