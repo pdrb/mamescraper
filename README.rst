@@ -1,8 +1,12 @@
 mamescraper
 ===========
 
-Scrap mame games information and images from 'mame.bigode.net' or
-'adb.arcadeitalia.net' and generate a xml for use with EmulationStation.
+Scrap mame games information and images from:
+
+- Bigode: 'http://mame.bigode.net/' (maintained by me) or
+- Arcade Database: 'http://adb.arcadeitalia.net/' (maintained by motoschifo)
+
+And generate a XML file for use with EmulationStation, the default frontend for RetroPie and Recalbox.
 
 About
 -----

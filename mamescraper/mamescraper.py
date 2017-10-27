@@ -1,9 +1,9 @@
 #!/usr/bin/python
 
-# mamescraper 0.2
+# mamescraper 0.3
 # author: Pedro Buteri Gonring
 # email: pedro@bigode.net
-# date: 23/02/2017
+# date: 26/10/2017
 
 try:
     import xml.etree.cElementTree as ET
@@ -22,7 +22,7 @@ import json
 import time
 
 
-version = '0.2'
+version = '0.3'
 
 
 # Parse and validate arguments
@@ -83,7 +83,7 @@ def get_parsed_args():
         )
     if options.workers < 1:
         parser.error('workers must be a positive number')
-    return (options, args)
+    return options
 
 
 # Get the file MD5 from server
@@ -219,7 +219,7 @@ def get_info_adb(rom):
     except Exception as ex:
         return 'URL: %s - Error: %s' % (scraper_url + query, ex)
     game = {}
-    game['players'] = data['players']
+    game['players'] = str(data['players'])
     game['name'] = data['title']
     game['releasedate'] = data['year']
     game['genre'] = data['genre']
@@ -473,7 +473,7 @@ def cli():
     global not_found_imgs
     global adb_found
 
-    (options, args) = get_parsed_args()
+    options = get_parsed_args()
     # Get only the dir name if a path is provided
     options.images_dir_name = os.path.basename(options.images_dir_name)
 
@@ -512,11 +512,10 @@ def cli():
     if not os.path.exists(images_dir):
         os.makedirs(images_dir)
 
-    print '\nScraping from: %s' % options.source
-
     # Init the scraper for correct source
     if options.source == 'bigode':
         scraper_url = 'http://mame.bigode.net/'
+        print '\nScraping from: %s - %s' % (options.source, scraper_url)
         mame_database_xml, match_list = init_bigode(romlist)
         print '\nDownloading %d images:' % len(match_list)
         init_workers(match_list)
@@ -524,6 +523,9 @@ def cli():
 
     elif options.source == 'adb':
         scraper_url = 'http://adb.arcadeitalia.net/'
+        print '\nScraping from: %s - %s' % (options.source, scraper_url)
+        print "\nRestricting the scraper to '1' worker to comply to adb rules"
+        options.workers = 1
         print '\nScraping %d games:' % len(romlist)
         init_workers(romlist)
         print 'Done!'
