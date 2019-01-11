@@ -1,3 +1,5 @@
+|Downloads|
+
 mamescraper
 ===========
 
@@ -8,8 +10,44 @@ Scrap mame games information and images from:
 
 And generate a XML file for use with EmulationStation, the default frontend for RetroPie and Recalbox.
 
+Simple example of the scraper in action::
+
+    $ mamescraper
+
+    Initializing the scraper...
+
+    Scraping from: bigode - http://mame.bigode.net/
+
+    Mame database xml not found
+     Downloading: 100%
+    Done!
+
+    Generating list of images to download...
+    Done!
+
+    Downloading 10 images:
+     aliensyn.png downloaded
+     guwange.png downloaded
+     bjourney.png downloaded
+     ecofghtr.png downloaded
+     captcomm.png downloaded
+     spf2t.png downloaded
+     nbahangt.png downloaded
+     ldrun.png downloaded
+     raiden2.png downloaded
+     tmnt2.png downloaded
+    Done!
+
+    Generating new gamelist xml...
+     New gamelist.xml file created!
+
+    Total time spent: 0m 1s
+
+    All set! Happy gaming :)
+
+
 About
------
+=====
 
 The purpose of this scraper is to be simple and fast. Currently it supports
 two sources with drastically different scraping methodologies.
@@ -29,16 +67,12 @@ in size, because they have a fixed 400 width.
 To illustrate the difference in scraping speed, the following shows the time
 spent scraping an entire mame 037b5 set (2241 roms) on both sources:
 
-'bigode' source:
-
-::
+'bigode' source::
 
     Command: mamescraper -w 10 -i title
     Time spent: 1m 10s
 
-'adb' source:
-
-::
+'adb' source::
 
     Command: mamescraper -w 10 -i title -s adb
     Time spent: 8m 29s
@@ -47,17 +81,13 @@ Note that mamescraper was run with 10 workers and scraping titles only. If ran
 in 'mixed' image mode (default) the difference is even higher, since images
 flyers are bigger on adb:
 
-'bigode' source:
-
-::
+'bigode' source::
 
     Command: mamescraper -w 10
     Time spent: 2m 2s
 
 
-'adb' source:
-
-::
+'adb' source::
 
     Command: mamescraper -w 10 -s adb
     Time spent: 26m 47s
@@ -72,28 +102,30 @@ for the images and tons of mame resources.
 Also, a huge thanks to Motoschifo creator of `Arcade Database <http://adb.arcadeitalia.net/>`_
 for the awesome arcade database website.
 
+
+Notes
+=====
+
+- Works on Python 2.7 and Python 3.3+
+- Uses only Python standard library for maximum compatibility
+
+
 Install
--------
+=======
 
-Install using pip:
-
-::
+Install using pip::
 
     pip install mamescraper
 
 or
 
-Download and set executable permission on the script file:
-
-::
+Download and set executable permission on the script file::
 
     chmod +x mamescraper.py
 
 or
 
-Download and run using the python interpreter:
-
-::
+Download and run using the python interpreter::
 
     python mamescraper.py
 
@@ -101,12 +133,13 @@ or
 
 Download the Windows executable file from the `releases <https://github.com/pdrb/mamescraper/releases>`_ page.
 
+
 Usage
------
+=====
 
 ::
 
-    Usage: mamescraper.py [options]
+    Usage: mamescraper [options]
 
     scrap mame games information and images from 'mame.bigode.net' or
     'adb.arcadeitalia.net'
@@ -129,54 +162,39 @@ Usage
                         (default: bigode)
     -w WORKERS          number of workers threads to use (default: 5)
 
+
 Examples
---------
+========
 
-Simplest use case is to run on the mame games directory itself:
-
-::
+Simplest use case is to run on the mame games directory itself::
 
     $ cd my_games_dir
     $ mamescraper
 
-Alternatively, you can pass the directory to the scraper:
-
-::
+Alternatively, you can pass the directory to the scraper::
 
     $ mamescraper -d path_to_games_dir
 
-Scrap only missing games in the existing 'gamelist.xml' file:
-
-::
+Scrap only missing games in the existing 'gamelist.xml' file::
 
     $ mamescraper -a
 
 It is useful for scrap on both sources if a game is not found. Just run the
-scraper a second time with append enable and a different source:
-
-::
+scraper a second time with append enable and a different source::
 
     $ mamescraper
     $ mamescraper -a -s adb
 
 If you have games in mixed formats, the following will run the first time
 scraping games in 'zip' format (default) and the second time appending the
-missing games in '7z' format:
-
-::
+missing games in '7z' format::
 
     $ mamescraper
     $ mamescraper -a -f 7z
 
-Run with 10 workers downloading only titles images:
-
-::
+Run with 10 workers downloading only titles images::
 
     $ mamescraper -i title -w 10
 
-Notes
------
 
-- Works on Python 2
-- Tested on Linux and Windows, but should work on all platforms
-- Uses only Python standard library for maximum compatibility
+.. |Downloads| image:: https://pepy.tech/badge/mamescraper

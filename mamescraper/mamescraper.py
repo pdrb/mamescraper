@@ -1,28 +1,32 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
-# mamescraper 0.3
+# mamescraper 0.4
 # author: Pedro Buteri Gonring
 # email: pedro@bigode.net
-# date: 26/10/2017
-
-try:
-    import xml.etree.cElementTree as ET
-except ImportError:
-    import xml.etree.ElementTree as ET
+# date: 2019-01-11
 
 from multiprocessing.pool import ThreadPool
 import hashlib
 import glob
 import os
 import sys
-import urllib2
 import zipfile
 import optparse
 import json
 import time
 
+if sys.version_info[0:2] <= (2, 7):
+    import urllib2
+    try:
+        import xml.etree.cElementTree as ET
+    except ImportError:
+        import xml.etree.ElementTree as ET
+else:
+    import urllib.request as urllib2
+    import xml.etree.ElementTree as ET
 
-version = '0.3'
+
+version = '0.4'
 
 
 # Parse and validate arguments
@@ -95,8 +99,8 @@ def get_md5():
     try:
         md5 = urllib2.urlopen(req).read()
     except urllib2.HTTPError:
-        print '\nError: Could not get database MD5'
-        print 'Aborting.'
+        print('\nError: Could not get database MD5')
+        print('Aborting.')
         sys.exit(1)
     return md5
 
@@ -105,11 +109,11 @@ def get_md5():
 def calc_md5(filename):
     md5 = hashlib.md5()
     with open(filename, 'rb') as f:
-        # iter() with two args needs:
-        # First: callable object, in this case an anonymous function
-        # Second: 'sentinel, stops iteration when this value is returned
-        for block in iter(lambda: f.read(65536), ''):
-            md5.update(block)
+        while True:
+            buf = f.read(65536)
+            if not buf:
+                break
+            md5.update(buf)
     return md5.hexdigest()
 
 
@@ -126,7 +130,10 @@ def get_mame_db(db_zip_file):
         downloaded = 0
         one_perc = length / 100
         with open(db_zip_file, 'wb') as f:
-            for chunk in iter(lambda: resp.read(16384), ''):
+            while True:
+                chunk = resp.read(16384)
+                if not chunk:
+                    break
                 downloaded += len(chunk)
                 f.write(chunk)
                 # '\r\x1b[K' == '\r'    Carriage Return
@@ -138,8 +145,8 @@ def get_mame_db(db_zip_file):
                 sys.stdout.flush()
         resp.close()
     except urllib2.HTTPError:
-        print '\nError: Could not download mame xml database'
-        print 'Aborting.'
+        print('\nError: Could not download mame xml database')
+        print('Aborting.')
         sys.exit(1)
 
     # Unzip file
@@ -147,8 +154,8 @@ def get_mame_db(db_zip_file):
     try:
         mame_database_zip.extractall(options.roms_dir)
     except:
-        print '\nError: Could not extract zip file, probably corrupted'
-        print 'Aborting.'
+        print('\nError: Could not extract zip file, probably corrupted')
+        print('Aborting.')
         sys.exit(1)
     mame_database_zip.close()
     os.remove(db_zip_file)
@@ -172,21 +179,21 @@ def init_bigode(romlist):
     # Check and download mame_database.xml if needed
     mame_database_md5 = get_md5().rstrip()
     if os.path.isfile(db_xml_file):
-        print '\nMame database xml found'
+        print('\nMame database xml found')
         md5 = calc_md5(db_xml_file)
-        if md5 == mame_database_md5:
-            print ' MD5 check: OK'
+        if md5 == mame_database_md5.decode():
+            print(' MD5 check: OK')
         else:
-            print ' MD5 check: FAIL'
-            print ' Downloading new database xml...'
+            print(' MD5 check: FAIL')
+            print(' Downloading new database xml...')
             get_mame_db(db_zip_file)
-            print '\nDone!'
+            print('\nDone!')
     else:
-        print '\nMame database xml not found'
+        print('\nMame database xml not found')
         get_mame_db(db_zip_file)
-        print '\nDone!'
+        print('\nDone!')
 
-    print '\nGenerating list of images to download...'
+    print('\nGenerating list of images to download...')
 
     # Open and read the database xml
     with open(db_xml_file, 'r') as f:
@@ -194,7 +201,7 @@ def init_bigode(romlist):
 
     # Create match list
     match_list = get_match_list(mame_database_xml, romlist)
-    print 'Done!'
+    print('Done!')
     return mame_database_xml, match_list
 
 
@@ -211,7 +218,7 @@ def get_info_adb(rom):
         return 'URL: %s - Error: %s' % (scraper_url + query, ex)
 
     # Parse information
-    data = json.loads(resp)
+    data = json.loads(resp.decode())
     try:
         data = data['result'][0]
     except IndexError:
@@ -225,8 +232,10 @@ def get_info_adb(rom):
     game['genre'] = data['genre']
     game['developer'] = data['manufacturer']
     try:
-        history = data['history'].splitlines()
-        history = filter(None, history)
+        # Create a string list removing empty lines and stripping whitespace
+        # from the beginning and end of each string
+        history = [l for l in data['history'].splitlines() if l.strip()]
+        # Use just the second line as description
         game['desc'] = history[1]
     except:
         game['desc'] = ''
@@ -388,8 +397,8 @@ def get_existing_games(output_file):
             try:
                 gamelist_xml = ET.parse(f)
             except:
-                print '\nError: %s is not a valid xml' %\
-                    os.path.basename(output_file)
+                print('\nError: %s is not a valid xml' %
+                      os.path.basename(output_file))
                 sys.exit(1)
         for game in gamelist_xml.iter('game'):
             try:
@@ -402,7 +411,7 @@ def get_existing_games(output_file):
                 pass
         return gamelist_xml, existing_games
     else:
-        print '\nError: %s does not exist' % os.path.basename(output_file)
+        print('\nError: %s does not exist' % os.path.basename(output_file))
         sys.exit(1)
 
 
@@ -434,7 +443,7 @@ def init_workers(romlist):
         pool.close()
         pool.join()
     except KeyboardInterrupt:
-        print 'Aborting.'
+        print('Aborting.')
         sys.exit(1)
 
 
@@ -488,10 +497,10 @@ def cli():
     init_time = time.time()
 
     if not os.path.isdir(options.roms_dir):
-        print '\nError: %s is not a valid directory' % options.roms_dir
+        print('\nError: %s is not a valid directory' % options.roms_dir)
         sys.exit(1)
 
-    print '\nInitializing the scraper...'
+    print('\nInitializing the scraper...')
 
     # Generate list of roms to scrape
     romlist = glob.glob(os.path.join(options.roms_dir, '*.' + options.format))
@@ -505,7 +514,7 @@ def cli():
 
     # Quit if no games to scrap
     if len(romlist) == 0:
-        print '\nNo roms to scrap, quitting...'
+        print('\nNo roms to scrap, quitting...')
         sys.exit(1)
 
     # Create images directory if not exists
@@ -515,20 +524,20 @@ def cli():
     # Init the scraper for correct source
     if options.source == 'bigode':
         scraper_url = 'http://mame.bigode.net/'
-        print '\nScraping from: %s - %s' % (options.source, scraper_url)
+        print('\nScraping from: %s - %s' % (options.source, scraper_url))
         mame_database_xml, match_list = init_bigode(romlist)
-        print '\nDownloading %d images:' % len(match_list)
+        print('\nDownloading %d images:' % len(match_list))
         init_workers(match_list)
-        print 'Done!'
+        print('Done!')
 
     elif options.source == 'adb':
         scraper_url = 'http://adb.arcadeitalia.net/'
-        print '\nScraping from: %s - %s' % (options.source, scraper_url)
-        print "\nRestricting the scraper to '1' worker to comply to adb rules"
+        print('\nScraping from: %s - %s' % (options.source, scraper_url))
+        print("\nRestricting the scraper to '1' worker to comply to adb rules")
         options.workers = 1
-        print '\nScraping %d games:' % len(romlist)
+        print('\nScraping %d games:' % len(romlist))
         init_workers(romlist)
-        print 'Done!'
+        print('Done!')
 
     # Create list of not found games
     if options.source == 'bigode':
@@ -541,18 +550,18 @@ def cli():
 
     #  Print not found games if needed
     if len(not_found) > 0:
-        print '\nGames not found:'
+        print('\nGames not found:')
         for item in not_found:
-            print ' %s' % item
-        print 'Total: %d' % len(not_found)
+            print(' %s' % item)
+        print('Total: %d' % len(not_found))
 
     # Quit if we dont need to generate xml
     if (options.source == 'bigode' and len(match_list) == 0) or\
             (options.source == 'adb' and len(adb_found) == 0):
-        print '\nNo game information found, quitting...'
+        print('\nNo game information found, quitting...')
         sys.exit(1)
 
-    print '\nGenerating new gamelist xml...'
+    print('\nGenerating new gamelist xml...')
 
     # Generate new gamelist for correct source
     if options.source == 'bigode':
@@ -575,13 +584,13 @@ def cli():
             gamelist = generate_gamelist_adb(adb_found)
         save_gamelist_xml(gamelist, output_file)
 
-    print ' New ' + options.output_file + ' file created!'
+    print(' New ' + options.output_file + ' file created!')
 
     # Calc and print time spent
     time_spent = int(time.time() - init_time)
-    print '\nTotal time spent: %dm %ds' % (time_spent / 60, time_spent % 60)
+    print('\nTotal time spent: %dm %ds' % (time_spent / 60, time_spent % 60))
 
-    print '\nAll set! Happy gaming :)'
+    print('\nAll set! Happy gaming :)')
 
 
 # Run cli function if invoked from shell
